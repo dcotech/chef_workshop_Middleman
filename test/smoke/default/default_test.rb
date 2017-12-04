@@ -16,3 +16,41 @@ end
 describe port(80), :skip do
   it { should_not be_listening }
 end
+
+describe package %(
+  build-essential 
+  libssl-dev 
+  libyaml-dev 
+  libreadline-dev 
+  openssl 
+  curl 
+  git-core 
+  zlib1g-dev 
+  bison 
+  libxml2-dev 
+  libxslt1-dev 
+  libcurl4-openssl-dev 
+  nodejs 
+  libsqlite3-dev 
+  sqlite3
+  apache2
+  git
+) do
+  it { should be_installed }
+end
+
+describe service('apache2') do
+  it { should be running }
+end
+
+describe file ('/etc/apache2/sites-enabled/blog.conf') do
+  it { should exist }
+end
+
+describe file ('/etc/thin/blog.yml') do
+  it { should exist }
+end
+
+describe file ('/etc/init.d/thin') do
+  it { should exist }
+end

@@ -1,6 +1,7 @@
 ---
 driver:
-  name: vagrant
+  name: docker
+  privileged: true
 
 provisioner:
   name: chef_zero
@@ -13,8 +14,8 @@ verifier:
   name: inspec
 
 platforms:
-  - name: ubuntu-16.04
-  - name: centos-7
+  - name: ubuntu-14.04
+#  - name: centos-7
 
 suites:
   - name: default
@@ -23,4 +24,5 @@ suites:
     verifier:
       inspec_tests:
         - test/smoke/default
-    attributes:
+    attributes: { ipaddress: "127.0.0.1"  }
+       
