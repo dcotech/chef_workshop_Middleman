@@ -52,7 +52,6 @@ remote_file '/tmp/ruby-2.1.1' do
 end
 
 bash 'install ruby' do
-#  user 'root'
   code <<-EOH
     mkdir ~/
 
