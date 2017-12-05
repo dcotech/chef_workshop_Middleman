@@ -15,8 +15,6 @@ verifier:
 
 platforms:
   - name: ubuntu-14.04
-#  - name: centos-7
-
 suites:
   - name: default
     run_list:
@@ -24,5 +22,5 @@ suites:
     verifier:
       inspec_tests:
         - test/smoke/default
-    attributes: { ipaddress: "127.0.0.1"  }
+    attributes:
        

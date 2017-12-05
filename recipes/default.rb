@@ -9,23 +9,36 @@
 #########################
 ### Prerequiste packages
 #########################
-package %w(build-essential libssl-dev libyaml-dev libreadline-dev openssl curl git-core zlib1g-dev bison libxml2-dev libxslt1-dev libcurl4-openssl-dev nodejs libsqlite3-dev sqlite3
-
-           curl
-           git-core
-           nodejs
-           git
-           wget
-           apache2) do 
+package %w(
+	  build-essential 
+	  libssl-dev 
+	  libyaml-dev 
+	  libreadline-dev 
+	  openssl 
+	  git-core 
+	  zlib1g-dev 
+	  bison 
+	  libxml2-dev 
+	  libxslt1-dev 
+	  libcurl4-openssl-dev 
+	  libsqlite3-dev 
+	  sqlite3
+          curl
+          git-core
+          nodejs
+          git
+          wget
+          apache2) do 
 end
 
   
 #user 'thin_user' do
- # comment 'Thin user to configure thin service and install the bundler'
- # uid '2001'
- # home '/home/thin_user'
- # shell '/bin/bash'
+#  comment 'Thin user to configure thin service and install the bundler'
+#  uid '2001'
+#  home '/home/thin_user'
+#  shell '/bin/bash'
 #end
+
 
 
 
@@ -34,7 +47,7 @@ end
 ####################
 
 service node['apache_service'] do
-  action :start 
+  action :start
   subscribes :restart, 'cookbook_file[/etc/apache2/sites-enabled/blog.conf]', :immediately
 end
 
@@ -52,7 +65,6 @@ remote_file '/tmp/ruby-2.1.1' do
 end
 
 bash 'install ruby' do
-#  user 'root'
   code <<-EOH
     mkdir ~/
 
@@ -73,6 +85,7 @@ bash 'install ruby' do
   not_if { ::File.exist?('/usr/local/include/ruby-2.1.0/x86_64-linux/ruby' )}
 end
 
+
 bash 'enable proper apache modules' do
   code <<-EOH
     sudo a2enmod proxy_http
@@ -81,7 +94,8 @@ bash 'enable proper apache modules' do
 
     sudo rm /etc/apache2/sites-enabled/000-default.conf
    EOH
-  ignore_failure true
+not_if { ::File.exist?('/etc/apache2/sites-enabled/blog.conf' )}
+   
 end
 
 template '/etc/apache2/sites-enabled/blog.conf' do
@@ -94,10 +108,15 @@ template '/etc/apache2/sites-enabled/blog.conf' do
    })
 end
 
+execute 'quick restart of apache to apply changes' do
+ command 'sudo service apache2 restart'
+ not_if { ::File.exist?('/etc/init.d/thin') }
+end
 
 
-####################################################################
-#### Cloning Git middleman repo, installing bundler, and thin service
+
+###################################################################
+#### Cloning Git repo, installing bundler, and thin service
 #####################################################################
 
 
@@ -109,15 +128,25 @@ bash 'Cloning git repo and installing prequisite services' do
 
     cd middleman-blog/
 
-    sudo gem install bundler
-      
+    sudo gem install bundler    
+    
     bundle install
       
     sudo thin install
- 
+
     sudo /usr/sbin/update-rc.d -f thin defaults
   EOH
+not_if { ::File.exist?('/etc/init.d/thin') }
 end
+
+
+#execute 'bundle install' do
+#  cwd "/home/middle_man/middleman-blog"                                                           
+#  user "thin_user" 
+#  action :run   
+#  environment ({'HOME' => '/home/thin_user', 'USER' => 'thin_user'})
+#  command 'bundle install'
+#end
 
 
 template '/etc/init.d/thin' do
@@ -125,9 +154,6 @@ template '/etc/init.d/thin' do
   owner 'root'
   group 'root'
   mode '0755'
-  #variables ({
-   #project_install_directory: node['project_install_directory']
-# })
 end
 
 template '/etc/thin/blog.yml' do
@@ -135,14 +161,12 @@ template '/etc/thin/blog.yml' do
   owner 'root'
   group 'root'
   mode '0755'
-  #variabes ({
- # project_install_directory: node['project_install_directory']
- # })
 end
 
 
 service 'thin' do 
-  action :restart
+  action :start
+  subscribes :reload,'template[/etc/init.d/thin]', :immediately
 end
 
 
